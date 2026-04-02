@@ -44,7 +44,7 @@ export default function CastVote() {
 
             const voterToken = localStorage.getItem("voterToken")
 
-            const res = await fetch(`http://localhost:5000/api/vote/cast`, {
+            const res = await fetch(`https://online-voting-system-production-2f97.up.railway.app/api/vote/cast`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

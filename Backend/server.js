@@ -6,17 +6,16 @@ const cors = require("cors")
 const app = express()
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}))
 app.use("/uploads", express.static("uploads"))
 
-mongoose.connect(process.env.MONGO_URI)
-.then(()=>{
-    console.log("MongoDB Connected")
-})
-
-// Auto update election status every minute
+// Auto update election status
 const Election = require("./models/Election")
-setInterval(async () => {
+const updateElectionStatus = async () => {
     const now = new Date()
     await Election.updateMany(
         { startTime: { $lte: now }, endTime: { $gte: now }, status: "upcoming" },
@@ -26,7 +25,15 @@ setInterval(async () => {
         { endTime: { $lte: now }, status: { $ne: "ended" } },
         { status: "ended" }
     )
-}, 60000)
+}
+
+// Run immediately on startup then every 60 seconds
+mongoose.connect(process.env.MONGO_URI)
+.then(async () => {
+    console.log("MongoDB Connected")
+    await updateElectionStatus()
+    setInterval(updateElectionStatus, 60000)
+})
 
 require("./models/User")
 require("./models/Election")
